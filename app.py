@@ -13,7 +13,7 @@ st.set_page_config(page_title="SJDA CRC Meeting Minutes Generator", layout="wide
 AREA_PROFILES = {
     "Tando Turail Council": {
         "region": "Southern",
-        "venue": "Zoom Link / online",
+        "venue": "Council Office - Talhar / online",
         "staff": [
             {"name": "Amyn Hyder", "designation": "Program Manager", "sig": ""},
             {"name": "Salima", "designation": "Assistant Program Manager", "sig": ""},
@@ -32,7 +32,7 @@ AREA_PROFILES = {
     },
     "Hyderabad": {
         "region": "Southern",
-        "venue": "Council Office - Hyderabad",
+        "venue": "Council Office - Hyderabad / Online",
         "staff": [
             {"name": "Amyn Hyder", "designation": "Program Manager", "sig": ""},
             {"name": "Salima Khiyani", "designation": "Assistant Program Manager", "sig": ""},
@@ -112,23 +112,22 @@ def generate_docx(location, meeting_date, meeting_time, venue, fdp_data, profile
     r.font.size = Pt(10)
     r.font.bold = True
 
-    info_table = doc.add_table(rows=6, cols=2)
+    info_table = doc.add_table(rows=5, cols=2)
     info_table.alignment = WD_TABLE_ALIGNMENT.CENTER
     info_table.style = 'Table Grid'
     
     info_data = [
-        ("Particular", "Details"),
         ("Region", profile["region"]),
         ("Location", location),
         ("Meeting Date", meeting_date.strftime("%d/%m/%Y")),
         ("Time", meeting_time),
-        ("Venue / Zoom Link", venue)
+        ("Venue / Meeting Link", venue)
     ]
     
     for i, (k, v) in enumerate(info_data):
         row = info_table.rows[i]
-        format_cell(row.cells[0], k, bold=(i==0), size=9.5)
-        format_cell(row.cells[1], v, bold=(i==0), size=9.5)
+        format_cell(row.cells[0], k, bold=False, size=9.5)
+        format_cell(row.cells[1], v, bold=False, size=9.5)
         row.cells[0].width = Inches(2.2)
         row.cells[1].width = Inches(4.8)
 
@@ -158,15 +157,25 @@ def generate_docx(location, meeting_date, meeting_time, venue, fdp_data, profile
     r.font.size = Pt(10)
     r.font.bold = True
 
-    fdp_table = doc.add_table(rows=1, cols=8)
+    fdp_table = doc.add_table(rows=1, cols=9)
     fdp_table.alignment = WD_TABLE_ALIGNMENT.CENTER
     fdp_table.style = 'Table Grid'
     
-    headers = ["S. No.", "Beneficiary Name", "Family ID", "Poverty Level", "Total Economic Support (PKR)", "Loan (PKR)", "Grant (PKR)", "Status (Approved / Rejected / Deferred)"]
-    col_widths = [Inches(0.5), Inches(1.8), Inches(0.8), Inches(0.8), Inches(0.9), Inches(0.7), Inches(0.7), Inches(1.1)]
+    headers = [
+        "S. No.", 
+        "Beneficiary Name", 
+        "Family ID", 
+        "Poverty Level", 
+        "Total Economic Support (PKR)", 
+        "Loan (PKR)", 
+        "Grant (PKR)", 
+        "Social Support P.M (PKR)", 
+        "Status (Approved / Rejected / Deferred)"
+    ]
+    col_widths = [Inches(0.4), Inches(1.5), Inches(0.7), Inches(0.7), Inches(0.8), Inches(0.6), Inches(0.6), Inches(0.8), Inches(0.9)]
 
     for i, h in enumerate(headers):
-        format_cell(fdp_table.rows[0].cells[i], h, bold=True, size=8.5, align=WD_ALIGN_PARAGRAPH.CENTER)
+        format_cell(fdp_table.rows[0].cells[i], h, bold=True, size=8.0, align=WD_ALIGN_PARAGRAPH.CENTER)
         fdp_table.rows[0].cells[i].width = col_widths[i]
 
     for idx, item in enumerate(fdp_data, start=1):
@@ -179,11 +188,12 @@ def generate_docx(location, meeting_date, meeting_time, venue, fdp_data, profile
             f"{item['support']:,}" if isinstance(item['support'], (int, float)) and item['support'] > 0 else str(item['support']),
             f"{item['loan']:,}" if isinstance(item['loan'], (int, float)) and item['loan'] > 0 else str(item['loan']),
             f"{item['grant']:,}" if isinstance(item['grant'], (int, float)) and item['grant'] > 0 else str(item['grant']),
+            f"{item['social_support']:,}" if isinstance(item['social_support'], (int, float)) and item['social_support'] > 0 else str(item['social_support']),
             item["status"]
         ]
         for i, val in enumerate(vals):
-            align_style = WD_ALIGN_PARAGRAPH.CENTER if i in [0, 2, 3, 7] else WD_ALIGN_PARAGRAPH.LEFT
-            format_cell(row_cells[i], val, size=8.5, align=align_style)
+            align_style = WD_ALIGN_PARAGRAPH.CENTER if i in [0, 2, 3, 8] else WD_ALIGN_PARAGRAPH.LEFT
+            format_cell(row_cells[i], val, size=8.0, align=align_style)
             row_cells[i].width = col_widths[i]
 
     # FORCE PAGE BREAK (Guarantees Page 2 is dedicated solely to Attendance & Signatures)
@@ -209,9 +219,9 @@ def generate_docx(location, meeting_date, meeting_time, venue, fdp_data, profile
         format_cell(staff_table.rows[0].cells[i], h, bold=True, size=9)
         staff_table.rows[0].cells[i].width = staff_widths[i]
 
+    # Fixed Staff List Only (No extra blank rows)
     for idx, member in enumerate(profile["staff"], start=1):
         row_cells = staff_table.add_row().cells
-        # Keep Signature field explicitly blank ("")
         vals = [str(idx), member["name"], member["designation"], ""]
         for i, val in enumerate(vals):
             format_cell(row_cells[i], val, size=9)
@@ -234,13 +244,23 @@ def generate_docx(location, meeting_date, meeting_time, venue, fdp_data, profile
         format_cell(crc_table.rows[0].cells[i], h, bold=True, size=9)
         crc_table.rows[0].cells[i].width = staff_widths[i]
 
-    for idx, member in enumerate(profile["crc"], start=1):
+    current_crc_idx = 1
+    for member in profile["crc"]:
         row_cells = crc_table.add_row().cells
-        # Keep Signature field explicitly blank ("")
-        vals = [str(idx), member["name"], member["designation"], ""]
+        vals = [str(current_crc_idx), member["name"], member["designation"], ""]
         for i, val in enumerate(vals):
             format_cell(row_cells[i], val, size=9)
             row_cells[i].width = staff_widths[i]
+        current_crc_idx += 1
+
+    # Add 2 Blank Rows for Guest Attendees (CRC)
+    for _ in range(2):
+        row_cells = crc_table.add_row().cells
+        vals = [str(current_crc_idx), "", "", ""]
+        for i, val in enumerate(vals):
+            format_cell(row_cells[i], val, size=9)
+            row_cells[i].width = staff_widths[i]
+        current_crc_idx += 1
 
     # Mandatory Signature Note & Focal Person Table
     p_note = doc.add_paragraph()
@@ -295,7 +315,7 @@ num_fdps = st.number_input("How many FDP decisions to enter?", min_value=1, max_
 fdp_data = []
 for i in range(int(num_fdps)):
     st.markdown(f"**Beneficiary #{i+1}**")
-    c1, c2, c3, c4, c5, c6, c7 = st.columns([2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2])
+    c1, c2, c3, c4, c5, c6, c7, c8 = st.columns([2, 1, 1, 1, 1, 1, 1, 1])
     
     name = c1.text_input(f"Name #{i+1}", key=f"name_{i}")
     fam_id = c2.text_input(f"Family ID #{i+1}", value="PE-", key=f"id_{i}")
@@ -303,7 +323,8 @@ for i in range(int(num_fdps)):
     support = c4.number_input(f"Total Support #{i+1}", value=75000, step=1000, key=f"sup_{i}")
     loan = c5.number_input(f"Loan #{i+1}", value=0, step=1000, key=f"loan_{i}")
     grant = c6.number_input(f"Grant #{i+1}", value=75000, step=1000, key=f"grant_{i}")
-    status = c7.selectbox(f"Status #{i+1}", ["", "Approved", "Rejected", "Deferred"], key=f"stat_{i}")
+    social_support = c7.number_input(f"Social Support P.M #{i+1}", value=0, step=1000, key=f"soc_{i}")
+    status = c8.selectbox(f"Status #{i+1}", ["", "Approved", "Rejected", "Deferred"], key=f"stat_{i}")
     
     fdp_data.append({
         "name": name,
@@ -312,6 +333,7 @@ for i in range(int(num_fdps)):
         "support": support,
         "loan": loan,
         "grant": grant,
+        "social_support": social_support,
         "status": status
     })
 
