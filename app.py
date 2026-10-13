@@ -17,7 +17,7 @@ AREA_PROFILES = {
         "staff": [
             {"name": "Amyn Hyder", "designation": "Program Manager", "sig": ""},
             {"name": "Salima", "designation": "Assistant Program Manager", "sig": ""},
-            {"name": "Muhammad Ali Khowaja", "designation": "Family Mentor", "sig": ""}
+            {"name": "Muhammad Ali Khowaja", "designation": "Family Development Officer", "sig": ""}
         ],
         "crc": [
             {"name": "Dr. Sindhu Hajyani", "designation": "Chairperson", "sig": ""},
@@ -30,13 +30,13 @@ AREA_PROFILES = {
             {"name": "Shamshad Ali", "designation": "Member", "sig": ""}
         ]
     },
-    "Hyderabad": {
+    "Hyderabad Council": {
         "region": "Southern",
         "venue": "Council Office - Hyderabad / Online",
         "staff": [
             {"name": "Amyn Hyder", "designation": "Program Manager", "sig": ""},
             {"name": "Salima Khiyani", "designation": "Assistant Program Manager", "sig": ""},
-            {"name": "Muhammad Ali Khowaja", "designation": "Family Mentor", "sig": ""}
+            {"name": "Muhammad Ali Khowaja", "designation": "Family Development Officer", "sig": ""}
         ],
         "crc": [
             {"name": "Kamran Karim Bux", "designation": "Chairperson", "sig": ""},
